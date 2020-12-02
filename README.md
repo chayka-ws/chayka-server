@@ -1,3 +1,64 @@
-# chayka-server
+# "Чайка"
 
-![](chayka_arch.png)
+## Общая архитектура
+
+![chayka](chayka_arch.png)
+
+Решение состоит из двух частей:
+
+* серверная (cloud) часть: выступает внешним mqtt-брокером, накопителем данных и UI-сервером
+* клиентская (target device) часть: выступает внутренним mqtt-брокером, получает непосредственные данные с датчиков метеостанции
+
+### Сервер (Cloud)
+
+Используется docker-compose для управления следующими сервисами:
+
+* mosquitto: mqtt-брокер, который подписан на получение метрик от клиента
+* telegraf: сборщик метрик, который собирает данные от mosquitto и записывает в db
+* influxdb: db, предназначенная для хранения метрик
+* grafana: web-UI, отображающий графики из метрик, хранящихся в db
+
+#### mosquitto
+
+Брокер подписывается на сборк данных от клиента. Используется конфигурационный файл mosqutto.conf и passwd.conf для ограничениядоступа:
+ * barani - креды для доступа к оригинальному брокеру
+ * client - креды для доступа внешних клиентов к брокеру
+ * telegraf - креды для доступа сервиса telegraf
+ 
+ #### telegraf
+ 
+ Агент сбора метрик из mosquitto и преобразования и записи в DB. Используется конфиг. файл telegraf.conf. Важные секции
+ 
+ * конфигурация DB (адрес и креды для записи в DB):
+ 
+ ```
+ [[outputs.influxdb]]
+  urls = ["http://influxdb:8086"]
+  database = "sensors"
+  skip_database_creation = true
+  username = "telegraf"
+  password = "telegraf"
+```
+* конфигурация подключения к mosquitto (адрес и креды для доступа)
+```
+[[inputs.mqtt_consumer]]
+   servers = ["tcp://mosquitto:1883"]
+   topics = ["/devices/barani/controls/#"]
+   data_format = "value"
+   data_type = "float"
+   username = "telegraf"
+   password = "telegraf"
+   client_id = "telegraf"
+   max_undelivered_messages = 1500
+ ```
+ 
+ #### influxdb (DB)
+
+Долгосрочно хранит полученные метрики в базе. Испольуется persistent volume для хранения (перед первым стартом volume нужно создать)
+
+#### grafana
+
+Web-UI позволяет строить графики и дашборды с метриками. База метрик - DB (influx). Для установки плагинов используется файл plugins.conf.
+
+### Клиент (wirenboard)
+
