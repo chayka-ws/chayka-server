@@ -60,7 +60,7 @@
 
 Web-UI позволяет строить графики и дашборды с метриками. База метрик - DB (influx). Для установки плагинов используется файл plugins.conf.
 
-### Клиент (wirenboard)
+### [Клиент](https://github.com/chayka-ws/chayka-wirenboard) (wirenboard)
 
 Клиент / target platform / mqtt-publisher представляет собой WirenBoard с подключеннами к нему датчиками метеостанции (Barani). 
 Для сбора метрик с датчиков используется штатные софтовые средства WirenBoard: wb-mqtt-serial, wb-homa-gpio. Для этого используются конфигурационные файлы:
