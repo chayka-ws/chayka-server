@@ -20,9 +20,12 @@ services:
 
   influxdb:
     image: influxdb
-    container_name: influxdb
+    container_name: influxd
+    ports:
+      - 8086:8086
     volumes:
       - "./influxdb/db:/var/lib/influxdb"
+    restart: on-failure
 
   grafana:
     image: grafana/grafana:latest
@@ -38,3 +41,5 @@ services:
       # Data persistency
       # sudo mkdir -p /srv/docker/grafana/data; chown 472:472 /srv/docker/grafana/data
       - ./grafana/data:/var/lib/grafana
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini
+#    user: '104'
