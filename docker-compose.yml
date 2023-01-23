@@ -17,12 +17,13 @@ services:
       - "./telegraf/config/telegraf.conf:/etc/telegraf/telegraf.conf"
     depends_on:
       - influxdb
+      - mosquitto
 
   influxdb:
-    image: influxdb
+    image: influxdb:1.8
     container_name: influxd
-    ports:
-      - 8086:8086
+#    ports:
+#      - 8086:8086
     volumes:
       - "./influxdb/db:/var/lib/influxdb"
     restart: on-failure
@@ -43,3 +44,13 @@ services:
       - ./grafana/data:/var/lib/grafana
       - ./grafana/grafana.ini:/etc/grafana/grafana.ini
 #    user: '104'
+
+  nginx:
+    image: nginx
+    container_name: nginx
+    ports:
+      - 80:80
+    links:
+      - grafana
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
